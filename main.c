@@ -387,6 +387,14 @@ static void ext_session_lock_surface_v1_handle_configure(void *data,
 	ext_session_lock_surface_v1_ack_configure(lock_surface, serial);
 	wl_surface_commit(surface->surface);
 	render_frame(surface);
+
+	// The initial damage_state() in main() that starts the draw loop is a
+	// no-op for surfaces that are not configured yet, which is always the case
+	// with ext-session-lock. Start the frame loop here, otherwise --fade-in
+	// does not animate until the next damage (e.g. the 1s clock timer).
+	if (!fade_is_complete(&surface->fade)) {
+		damage_surface(surface);
+	}
 }
 
 static const struct ext_session_lock_surface_v1_listener ext_session_lock_surface_v1_listener = {
